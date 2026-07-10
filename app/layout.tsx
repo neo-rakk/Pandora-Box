@@ -1,10 +1,9 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display' })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: 'PANDORA BOX - 360° Communication Agency',
@@ -37,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light bg-background">
-      <body className={`${inter.className} ${spaceGrotesk.variable} antialiased bg-background text-foreground`}>
+      <body className={`${inter.variable} antialiased bg-background text-foreground font-sans`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

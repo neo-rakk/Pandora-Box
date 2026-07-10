@@ -9,7 +9,15 @@ const DEFAULT_DATA = {
   hero: {
     title: 'Transform Your Brand',
     subtitle: 'Experience 360° integrated communication strategies that drive results',
-    cta: 'Get Started'
+    cta: 'Get Started',
+    ctaSecondary: 'Our Services',
+    bgType: 'none',
+    backgroundImage: 'https://images.unsplash.com/photo-1542744094-3a31f103e35f?q=80&w=1600',
+    backgroundImages: [
+      { url: 'https://images.unsplash.com/photo-1542744094-3a31f103e35f?q=80&w=1600' },
+      { url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600' },
+      { url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600' }
+    ]
   },
   about: {
     title: 'Who We Are',
@@ -18,14 +26,17 @@ const DEFAULT_DATA = {
     values: ['Excellence', 'Innovation', 'Integrity', 'Impact']
   },
   services: {
-    title: 'Our Services',
+    title: 'Nos Services',
     services: [
-      { name: 'Brand Strategy', description: 'Comprehensive brand positioning and market analysis' },
-      { name: 'Digital Marketing', description: 'Multi-channel digital campaigns and optimization' },
-      { name: 'Content Creation', description: 'Strategic content for all platforms and formats' },
-      { name: 'PR & Communications', description: 'Media relations and crisis management' },
-      { name: 'Social Media', description: 'Community building and social engagement' },
-      { name: 'Analytics & Insights', description: 'Data-driven reporting and performance metrics' }
+      { name: 'Conseil Stratégique & PR', description: 'Architecture de communication pour maximiser vos performances commerciales. Analyse, stratégie et relations publiques haut de gamme.' },
+      { name: 'L’Atelier de l’Image', description: 'Vidéo de production, photo et audio premium. Contenus qui captivent conçus par notre collectif de professionnels passionnés.' },
+      { name: 'Événementiel & Activation', description: 'Du séminaire B2B au festival grand public. Transformons vos objectifs en expériences immersives et marquantes.' },
+      { name: 'Régie Publicitaire', description: 'Plans média redoutablement efficaces. Affichage Outdoor et Indoor avec obsession du ROI et visibilité de masse.' },
+      { name: 'Branding & Identité', description: 'Création d’univers visuels forts et mémorables. Plateforme de marque complète et déclinaisons d’identité premium.' },
+      { name: 'Numérique et réseaux sociaux', description: 'Visibilité, engagement et conversion. Écosystèmes digitaux qui génèrent leads et communautés engagées.' },
+      { name: 'Marketing IoT & Connecté', description: 'Affichage dynamique intelligent et capteurs d’audience. Communication de demain qui interagit et s’adapte en temps réel.' },
+      { name: 'Logiciels sur-mesure & CRM', description: 'Tableaux de bord, KPI, applications Web/Mobile, etc. automatisation. Outils internes à la hauteur de vos ambitions.' },
+      { name: 'Expériences Immersives', description: 'Réalité augmentée, visites virtuelles et bornes interactives. Créez le Wow Effect avec technologies immersives.' }
     ]
   },
   innovation: {
@@ -48,6 +59,46 @@ const DEFAULT_DATA = {
     subtitle: "Let's discuss your next project",
     email: 'hello@pandorabox.com',
     phone: '+1 (555) 123-4567'
+  },
+  features: {
+    title: 'Why Pandora Box',
+    subtitle: 'What makes us different and why forward-thinking brands choose us.',
+    features: [
+      {
+        title: "360° Integrated Strategy",
+        description: "Unified approach across all communication channels for consistent brand messaging and maximum impact."
+      },
+      {
+        title: "Data-Driven Optimization",
+        description: "Real-time analytics and insights drive every decision. We measure, analyze, and continuously improve."
+      },
+      {
+        title: "Creative Excellence",
+        description: "Award-winning creative team that brings bold ideas to life with premium production quality."
+      },
+      {
+        title: "Technology Forward",
+        description: "IoT, AR/VR, and AI-powered solutions that put your brand at the forefront of innovation."
+      },
+      {
+        title: "Enterprise Focus",
+        description: "Specialized expertise in serving enterprise clients with complex, multi-channel requirements."
+      },
+      {
+        title: "ROI Obsessed",
+        description: "Every campaign tracked, optimized for results. Your success metrics are our key performance indicators."
+      }
+    ]
+  },
+  settings: {
+    pageTitle: "PANDORA BOX - 360° Communication Agency",
+    pageDescription: "Premium integrated marketing communications for enterprise brands",
+    logoText: "Pandora Box",
+    favicon: "📦",
+    primaryColor: "#0071e3",
+    backgroundColor: "#ffffff",
+    textColor: "#000000",
+    cardColor: "#f5f5f5"
   }
 }
 

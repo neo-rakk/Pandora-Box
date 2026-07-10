@@ -34,9 +34,21 @@ export default function Contact() {
     e.preventDefault()
     setSubmitting(true)
     try {
-      // Form submission logic would go here
-      console.log('Form submitted:', formData)
-      setFormData({ name: '', email: '', message: '' })
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (res.ok) {
+        alert('Message sent successfully!')
+        setFormData({ name: '', email: '', message: '' })
+      } else {
+        alert('Failed to send message')
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error)
+      alert('Error sending message')
     } finally {
       setSubmitting(false)
     }

@@ -36,20 +36,29 @@ export default function Dashboard() {
     }
   }
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const hashedPassword = btoa(password)
-    const adminPassword = btoa(process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123')
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      })
 
-    if (hashedPassword === adminPassword || password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
-      const newToken = btoa(Date.now().toString())
-      localStorage.setItem('admin_token', newToken)
-      setToken(newToken)
-      setIsAuthenticated(true)
-      setPassword('')
-      fetchData(newToken)
-    } else {
-      alert('Invalid password')
+      if (res.ok) {
+        const result = await res.json()
+        const adminToken = result.token
+        localStorage.setItem('admin_token', adminToken)
+        setToken(adminToken)
+        setIsAuthenticated(true)
+        setPassword('')
+        fetchData(adminToken)
+      } else {
+        alert('Invalid password')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      alert('Authentication failed')
     }
   }
 
@@ -135,6 +144,7 @@ export default function Dashboard() {
                 content={data[activeSection]}
                 token={token}
                 onSave={() => fetchData(token)}
+                onUnauthorized={handleLogout}
               />
             )}
           </section>
