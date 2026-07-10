@@ -36,7 +36,7 @@ A production-ready Next.js 16 application featuring a sophisticated dark-themed 
 ### 1. Install & Setup (2 minutes)
 
 ```bash
-git clone <repo-url>
+git clone <https://github.com/neo-rakk/Pandora-Box>
 cd pandora-box
 pnpm install
 node scripts/init-data.mjs
