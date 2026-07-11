@@ -143,7 +143,7 @@ export default function Dashboard() {
                 section={activeSection}
                 content={data[activeSection]}
                 token={token}
-                onSave={() => fetchData(token)}
+                onSave={() => fetchData(token!)}
                 onUnauthorized={handleLogout}
               />
             )}
