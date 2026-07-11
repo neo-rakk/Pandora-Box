@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs/promises'
-import path from 'path'
+import { verifyAdminToken } from '@/lib/admin-auth'
+import { readContentData, writeContentData } from '@/lib/content-store'
 
-const DB_FILE = path.join(process.cwd(), 'data.json')
-
-const DEFAULT_DATA = {
+const DEFAULT_DATA: Record<string, unknown> = {
   hero: {
     title: 'Transform Your Brand',
     subtitle: 'Experience 360° integrated communication strategies that drive results',
@@ -26,6 +24,7 @@ const DEFAULT_DATA = {
   },
   services: {
     title: 'Nos Services',
+    subtitle: 'Quatre univers complémentaires pour orchestrer votre présence avec précision, créativité et technologie.',
     services: [
       { name: 'Conseil Stratégique & PR', description: 'Architecture de communication pour maximiser vos performances commerciales. Analyse, stratégie et relations publiques haut de gamme.' },
       { name: 'L’Atelier de l’Image', description: 'Vidéo de production, photo et audio premium. Contenus qui captivent conçus par notre collectif de professionnels passionnés.' },
@@ -36,6 +35,12 @@ const DEFAULT_DATA = {
       { name: 'Marketing IoT & Connecté', description: 'Affichage dynamique intelligent et capteurs d’audience. Communication de demain qui interagit et s’adapte en temps réel.' },
       { name: 'Logiciels sur-mesure & CRM', description: 'Tableaux de bord, KPI, applications Web/Mobile, etc. automatisation. Outils internes à la hauteur de vos ambitions.' },
       { name: 'Expériences Immersives', description: 'Réalité augmentée, visites virtuelles et bornes interactives. Créez le Wow Effect avec technologies immersives.' }
+    ],
+    universes: [
+      { title: 'Conseil & Stratégie', subtitle: 'Architecture de marque', headline: 'Une direction claire avant chaque prise de parole.', description: 'Nous cadrons vos enjeux, votre positionnement et vos messages afin de transformer chaque action de communication en levier de confiance.', expertise: 'Conseil stratégique, Relations publiques, Branding, Plans média', cta: 'Structurer votre vision', image: '/uploads/1783702356824-wp8030358-macbook-4k-wallpapers.jpg', imageAlt: 'Espace de stratégie premium avec ordinateur portable', backgroundVariant: 'soft' },
+      { title: 'Création de contenu', subtitle: 'Production premium', headline: 'Des images, des sons et des récits qui installent une présence.', description: 'Notre atelier conçoit des contenus précis et mémorables, pensés pour sublimer une marque sans jamais la surcharger.', expertise: 'Production vidéo, Photographie, Audio, Direction créative', cta: 'Imaginer vos contenus', image: '/uploads/1783699895703-wp8030358-macbook-4k-wallpapers.jpg', imageAlt: 'Production visuelle premium sur écran haute résolution', backgroundVariant: 'glass' },
+      { title: 'Digital', subtitle: 'Croissance connectée', headline: 'Un écosystème fluide, mesurable et prêt à convertir.', description: 'Nous relions stratégie sociale, logiciels métiers et CRM pour créer des parcours cohérents, pilotés par la donnée.', expertise: 'Réseaux sociaux, Logiciels sur-mesure, CRM, Tableaux de bord', cta: 'Accélérer votre digital', image: '/uploads/1783699937804-wp8030358-macbook-4k-wallpapers.jpg', imageAlt: 'Interface digitale élégante sur ordinateur portable', backgroundVariant: 'soft' },
+      { title: 'Innovation & Expériences', subtitle: 'Technologies expérientielles', headline: 'Créer des moments qui restent, en physique comme en immersif.', description: 'Affichage intelligent, IoT, réalité augmentée et activations événementielles donnent à votre marque une dimension vivante.', expertise: 'IoT, Affichage intelligent, Réalité augmentée, Événementiel', cta: 'Concevoir une expérience', image: '/placeholder.jpg', imageAlt: 'Installation immersive contemporaine', backgroundVariant: 'deep' }
     ]
   },
   innovation: {
@@ -102,12 +107,7 @@ const DEFAULT_DATA = {
 }
 
 async function getData() {
-  try {
-    const content = await fs.readFile(DB_FILE, 'utf-8')
-    return JSON.parse(content)
-  } catch (error) {
-    return DEFAULT_DATA
-  }
+  return readContentData(DEFAULT_DATA)
 }
 
 export async function GET(request: NextRequest) {
@@ -137,8 +137,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-    // Verify the token (in production, this would be more secure)
-    if (token !== process.env.ADMIN_TOKEN) {
+    if (!verifyAdminToken(token)) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
@@ -148,10 +147,9 @@ export async function POST(request: NextRequest) {
     // Update the data
     const updatedData = { ...data, ...body }
 
-    // Save to file
-    await fs.writeFile(DB_FILE, JSON.stringify(updatedData, null, 2))
+    const result = await writeContentData(updatedData)
 
-    return NextResponse.json({ success: true, data: updatedData })
+    return NextResponse.json({ success: true, storage: result.storage, data: updatedData })
   } catch (error) {
     console.error('Error saving data:', error)
     return NextResponse.json({ error: 'Failed to save data' }, { status: 500 })

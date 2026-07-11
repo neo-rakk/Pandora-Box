@@ -1,48 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
+import { verifyAdminToken } from '@/lib/admin-auth'
+import { uploadImageToSupabaseStorage } from '@/lib/supabase-storage'
+
+const MAX_INLINE_IMAGE_SIZE = 6 * 1024 * 1024
+
+function sanitizeFilename(filename: string) {
+  return filename.replace(/[^a-zA-Z0-9.-]/g, '_')
+}
+
+function buildInlineImageUrl(file: File, buffer: Buffer) {
+  const mimeType = file.type || 'image/jpeg'
+  return `data:${mimeType};base64,${buffer.toString('base64')}`
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Verify admin authorization token
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const token = authHeader.substring(7)
-    if (token !== process.env.ADMIN_TOKEN) {
+    if (!verifyAdminToken(token)) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    // 2. Parse the multipart form data
     const formData = await request.formData()
-    const file = formData.get('file') as Blob | null
+    const file = formData.get('file')
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // 3. Convert Blob to Buffer
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'Only image uploads are supported' }, { status: 400 })
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer())
-    
-    // Create a safe, timestamped filename
-    const originalName = (file as any).name || 'upload.jpg'
-    const safeName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const filename = `${Date.now()}-${safeName}`
-    
+    const filename = `${Date.now()}-${sanitizeFilename(file.name || 'upload.jpg')}`
+
+    try {
+      const supabaseUpload = await uploadImageToSupabaseStorage(file, buffer, filename)
+
+      if (supabaseUpload) {
+        return NextResponse.json({
+          success: true,
+          storage: 'supabase',
+          url: supabaseUpload.url,
+          path: supabaseUpload.path,
+          bucket: supabaseUpload.bucket,
+        })
+      }
+    } catch (supabaseError) {
+      console.warn('Supabase upload unavailable, falling back to local storage:', supabaseError)
+    }
+
     const uploadDir = path.join(process.cwd(), 'public', 'uploads')
 
-    // 4. Ensure the uploads directory exists
-    await fs.mkdir(uploadDir, { recursive: true })
+    try {
+      await fs.mkdir(uploadDir, { recursive: true })
+      await fs.writeFile(path.join(uploadDir, filename), buffer)
 
-    // 5. Write the file to the uploads folder
-    await fs.writeFile(path.join(uploadDir, filename), buffer)
+      return NextResponse.json({
+        success: true,
+        storage: 'filesystem',
+        url: `/uploads/${filename}`,
+      })
+    } catch (storageError) {
+      console.warn('Filesystem upload unavailable, falling back to inline image storage:', storageError)
 
-    return NextResponse.json({
-      success: true,
-      url: `/uploads/${filename}`
-    })
+      if (file.size > MAX_INLINE_IMAGE_SIZE) {
+        return NextResponse.json(
+          { error: 'Image is too large for inline storage. Please configure Supabase Storage or use an image under 6 MB.' },
+          { status: 413 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        storage: 'inline',
+        url: buildInlineImageUrl(file, buffer),
+      })
+    }
   } catch (error) {
     console.error('File upload API error:', error)
     return NextResponse.json({ error: 'Internal server error during upload' }, { status: 500 })

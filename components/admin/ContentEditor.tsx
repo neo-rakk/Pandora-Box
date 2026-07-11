@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 
 interface ContentEditorProps {
   section: string
@@ -22,24 +22,53 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
   }, [content, section])
 
   const handleChange = (key: string, value: any) => {
-    setEditedContent({ ...editedContent, [key]: value })
+    const nextContent = { ...editedContent, [key]: value }
+    setEditedContent(nextContent)
+    return nextContent
   }
 
   const handleArrayChange = (key: string, index: number, value: string) => {
     const arr = [...(editedContent[key] || [])]
     arr[index] = value
-    setEditedContent({ ...editedContent, [key]: arr })
+    const nextContent = { ...editedContent, [key]: arr }
+    setEditedContent(nextContent)
+    return nextContent
   }
 
   const handleNestedChange = (key: string, index: number, field: string, value: string) => {
     const arr = [...(editedContent[key] || [])]
     arr[index] = { ...arr[index], [field]: value }
-    setEditedContent({ ...editedContent, [key]: arr })
+    const nextContent = { ...editedContent, [key]: arr }
+    setEditedContent(nextContent)
+    return nextContent
+  }
+
+  const saveContent = async (contentToSave = editedContent) => {
+    const res = await fetch('/api/data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ [section]: contentToSave })
+    })
+
+    if (res.status === 401) {
+      throw new Error('unauthorized')
+    }
+
+    if (!res.ok) {
+      const result = await res.json().catch(() => null)
+      throw new Error(result?.error || 'Failed to save')
+    }
+
+    onSave()
+    return res.json().catch(() => null)
   }
 
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    onUrlResult: (url: string) => void,
+    onUrlResult: (url: string) => any,
     fieldIdentifier: string
   ) => {
     const file = e.target.files?.[0]
@@ -67,11 +96,13 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
         }
       } else if (res.ok) {
         const result = await res.json()
-        onUrlResult(result.url)
-        setMessage('File uploaded successfully!')
+        const nextContent = onUrlResult(result.url)
+        await saveContent(nextContent)
+        setMessage(result.storage === 'inline' ? 'File uploaded and published successfully!' : result.storage === 'supabase' ? 'File uploaded to Supabase and published successfully!' : 'File uploaded and published successfully!')
         setTimeout(() => setMessage(''), 3000)
       } else {
-        setMessage('Upload failed.')
+        const result = await res.json().catch(() => null)
+        setMessage(result?.error || 'Upload failed.')
       }
     } catch (error) {
       console.error('Error uploading file:', error)
@@ -85,30 +116,19 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
     setSaving(true)
     setMessage('')
     try {
-      const res = await fetch('/api/data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ [section]: editedContent })
-      })
-
-      if (res.status === 401) {
+      await saveContent()
+      setMessage('Saved successfully!')
+      setTimeout(() => setMessage(''), 2000)
+    } catch (error) {
+      if (error instanceof Error && error.message === 'unauthorized') {
         setMessage('Session expired or unauthorized. Logging out...')
         if (onUnauthorized) {
           setTimeout(() => onUnauthorized(), 1500)
         }
-      } else if (res.ok) {
-        setMessage('Saved successfully!')
-        onSave()
-        setTimeout(() => setMessage(''), 2000)
       } else {
-        setMessage('Failed to save')
+        console.error('Error saving:', error)
+        setMessage(error instanceof Error ? error.message : 'Error saving changes')
       }
-    } catch (error) {
-      console.error('Error saving:', error)
-      setMessage('Error saving changes')
     } finally {
       setSaving(false)
     }
@@ -127,7 +147,7 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
         {Object.entries(editedContent).map(([key, value]: [string, any]) => {
           if (typeof value === 'string') {
             const isImageField = checkIsImageField(key)
-            const isImageUrl = isImageField && value && (value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://'))
+            const isImageUrl = isImageField && value && (value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:image/'))
             return (
               <div key={key}>
                 <label className="block text-sm font-medium text-foreground mb-2 capitalize" htmlFor={key}>
@@ -251,7 +271,7 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
                                   </label>
                                 )}
                               </div>
-                              {isNestedImage && fieldValue && (fieldValue.startsWith('/') || fieldValue.startsWith('http://') || fieldValue.startsWith('https://')) && (
+                              {isNestedImage && fieldValue && (fieldValue.startsWith('/') || fieldValue.startsWith('http://') || fieldValue.startsWith('https://') || fieldValue.startsWith('data:image/')) && (
                                 <div className="mt-2 relative w-24 h-16 border border-border rounded overflow-hidden bg-background">
                                   <img src={fieldValue} alt="Preview" className="w-full h-full object-cover" />
                                 </div>
