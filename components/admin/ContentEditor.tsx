@@ -68,10 +68,11 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
       } else if (res.ok) {
         const result = await res.json()
         onUrlResult(result.url)
-        setMessage('File uploaded successfully!')
+        setMessage(result.storage === 'inline' ? 'File uploaded successfully! Save to publish this image.' : 'File uploaded successfully!')
         setTimeout(() => setMessage(''), 3000)
       } else {
-        setMessage('Upload failed.')
+        const result = await res.json().catch(() => null)
+        setMessage(result?.error || 'Upload failed.')
       }
     } catch (error) {
       console.error('Error uploading file:', error)
@@ -127,7 +128,7 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
         {Object.entries(editedContent).map(([key, value]: [string, any]) => {
           if (typeof value === 'string') {
             const isImageField = checkIsImageField(key)
-            const isImageUrl = isImageField && value && (value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://'))
+            const isImageUrl = isImageField && value && (value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:image/'))
             return (
               <div key={key}>
                 <label className="block text-sm font-medium text-foreground mb-2 capitalize" htmlFor={key}>
@@ -251,7 +252,7 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
                                   </label>
                                 )}
                               </div>
-                              {isNestedImage && fieldValue && (fieldValue.startsWith('/') || fieldValue.startsWith('http://') || fieldValue.startsWith('https://')) && (
+                              {isNestedImage && fieldValue && (fieldValue.startsWith('/') || fieldValue.startsWith('http://') || fieldValue.startsWith('https://') || fieldValue.startsWith('data:image/')) && (
                                 <div className="mt-2 relative w-24 h-16 border border-border rounded overflow-hidden bg-background">
                                   <img src={fieldValue} alt="Preview" className="w-full h-full object-cover" />
                                 </div>

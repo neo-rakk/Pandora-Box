@@ -68,6 +68,53 @@
         "name": "Expériences Immersives",
         "description": "Réalité augmentée, visites virtuelles et bornes interactives. Créez le Wow Effect avec technologies immersives."
       }
+    ],
+    "subtitle": "Quatre univers complémentaires pour orchestrer votre présence avec précision, créativité et technologie.",
+    "universes": [
+      {
+        "title": "Conseil & Stratégie",
+        "subtitle": "Architecture de marque",
+        "headline": "Une direction claire avant chaque prise de parole.",
+        "description": "Nous cadrons vos enjeux, votre positionnement et vos messages afin de transformer chaque action de communication en levier de confiance.",
+        "expertise": "Conseil stratégique, Relations publiques, Branding, Plans média",
+        "cta": "Structurer votre vision",
+        "image": "/uploads/1783702356824-wp8030358-macbook-4k-wallpapers.jpg",
+        "imageAlt": "Espace de stratégie premium avec ordinateur portable",
+        "backgroundVariant": "soft"
+      },
+      {
+        "title": "Création de contenu",
+        "subtitle": "Production premium",
+        "headline": "Des images, des sons et des récits qui installent une présence.",
+        "description": "Notre atelier conçoit des contenus précis et mémorables, pensés pour sublimer une marque sans jamais la surcharger.",
+        "expertise": "Production vidéo, Photographie, Audio, Direction créative",
+        "cta": "Imaginer vos contenus",
+        "image": "/uploads/1783699895703-wp8030358-macbook-4k-wallpapers.jpg",
+        "imageAlt": "Production visuelle premium sur écran haute résolution",
+        "backgroundVariant": "glass"
+      },
+      {
+        "title": "Digital",
+        "subtitle": "Croissance connectée",
+        "headline": "Un écosystème fluide, mesurable et prêt à convertir.",
+        "description": "Nous relions stratégie sociale, logiciels métiers et CRM pour créer des parcours cohérents, pilotés par la donnée.",
+        "expertise": "Réseaux sociaux, Logiciels sur-mesure, CRM, Tableaux de bord",
+        "cta": "Accélérer votre digital",
+        "image": "/uploads/1783699937804-wp8030358-macbook-4k-wallpapers.jpg",
+        "imageAlt": "Interface digitale élégante sur ordinateur portable",
+        "backgroundVariant": "soft"
+      },
+      {
+        "title": "Innovation & Expériences",
+        "subtitle": "Technologies expérientielles",
+        "headline": "Créer des moments qui restent, en physique comme en immersif.",
+        "description": "Affichage intelligent, IoT, réalité augmentée et activations événementielles donnent à votre marque une dimension vivante.",
+        "expertise": "IoT, Affichage intelligent, Réalité augmentée, Événementiel",
+        "cta": "Concevoir une expérience",
+        "image": "/placeholder.jpg",
+        "imageAlt": "Installation immersive contemporaine",
+        "backgroundVariant": "deep"
+      }
     ]
   },
   "innovation": {
