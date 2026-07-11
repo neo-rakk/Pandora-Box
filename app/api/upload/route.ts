@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 import { verifyAdminToken } from '@/lib/admin-auth'
+import { uploadImageToSupabaseStorage } from '@/lib/supabase-storage'
 
 const MAX_INLINE_IMAGE_SIZE = 6 * 1024 * 1024
 
@@ -39,6 +40,23 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer())
     const filename = `${Date.now()}-${sanitizeFilename(file.name || 'upload.jpg')}`
+
+    try {
+      const supabaseUpload = await uploadImageToSupabaseStorage(file, buffer, filename)
+
+      if (supabaseUpload) {
+        return NextResponse.json({
+          success: true,
+          storage: 'supabase',
+          url: supabaseUpload.url,
+          path: supabaseUpload.path,
+          bucket: supabaseUpload.bucket,
+        })
+      }
+    } catch (supabaseError) {
+      console.warn('Supabase upload unavailable, falling back to local storage:', supabaseError)
+    }
+
     const uploadDir = path.join(process.cwd(), 'public', 'uploads')
 
     try {
@@ -55,7 +73,7 @@ export async function POST(request: NextRequest) {
 
       if (file.size > MAX_INLINE_IMAGE_SIZE) {
         return NextResponse.json(
-          { error: 'Image is too large for inline storage. Please use an image under 6 MB.' },
+          { error: 'Image is too large for inline storage. Please configure Supabase Storage or use an image under 6 MB.' },
           { status: 413 }
         )
       }

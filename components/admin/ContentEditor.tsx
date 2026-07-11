@@ -68,7 +68,7 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
       } else if (res.ok) {
         const result = await res.json()
         onUrlResult(result.url)
-        setMessage(result.storage === 'inline' ? 'File uploaded successfully! Save to publish this image.' : 'File uploaded successfully!')
+        setMessage(result.storage === 'inline' ? 'File uploaded successfully! Save to publish this image.' : result.storage === 'supabase' ? 'File uploaded to Supabase successfully!' : 'File uploaded successfully!')
         setTimeout(() => setMessage(''), 3000)
       } else {
         const result = await res.json().catch(() => null)
