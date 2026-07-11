@@ -148,10 +148,12 @@ function ServiceContent({ universe }: { universe: NormalizedServiceUniverse }) {
 }
 
 function IllustrationContainer({ universe, priority }: { universe: NormalizedServiceUniverse; priority: boolean }) {
+  const imageSrc = universe.image || FALLBACK_IMAGE
+
   return (
     <div className="service-illustration relative z-10 mx-auto aspect-[4/3] w-full max-w-[620px] overflow-hidden rounded-[2.25rem] border border-white/10 bg-background/40 shadow-[0_30px_90px_rgba(0,0,0,0.16)] transition duration-700 group-hover:scale-[1.015] dark:shadow-[0_30px_90px_rgba(255,255,255,0.08)] md:rounded-[3rem]">
       <Image
-        src={universe.image || FALLBACK_IMAGE}
+        src={imageSrc}
         alt={universe.imageAlt || ''}
         fill
         sizes="(max-width: 768px) 92vw, (max-width: 1200px) 46vw, 620px"
@@ -159,6 +161,7 @@ function IllustrationContainer({ universe, priority }: { universe: NormalizedSer
         placeholder="blur"
         blurDataURL={BLUR_PLACEHOLDER}
         priority={priority}
+        unoptimized={imageSrc.startsWith('data:')}
       />
       <div className="absolute inset-0 bg-gradient-to-tr from-background/25 via-transparent to-white/20" aria-hidden="true" />
     </div>
