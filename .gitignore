@@ -16,3 +16,5 @@ node_modules
 *.log
 
 # Note: data.json is tracked in git to preserve content changes
+
+auth.json
