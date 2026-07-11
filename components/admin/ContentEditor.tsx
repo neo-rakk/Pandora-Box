@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 
 interface ContentEditorProps {
   section: string
@@ -22,24 +22,53 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
   }, [content, section])
 
   const handleChange = (key: string, value: any) => {
-    setEditedContent({ ...editedContent, [key]: value })
+    const nextContent = { ...editedContent, [key]: value }
+    setEditedContent(nextContent)
+    return nextContent
   }
 
   const handleArrayChange = (key: string, index: number, value: string) => {
     const arr = [...(editedContent[key] || [])]
     arr[index] = value
-    setEditedContent({ ...editedContent, [key]: arr })
+    const nextContent = { ...editedContent, [key]: arr }
+    setEditedContent(nextContent)
+    return nextContent
   }
 
   const handleNestedChange = (key: string, index: number, field: string, value: string) => {
     const arr = [...(editedContent[key] || [])]
     arr[index] = { ...arr[index], [field]: value }
-    setEditedContent({ ...editedContent, [key]: arr })
+    const nextContent = { ...editedContent, [key]: arr }
+    setEditedContent(nextContent)
+    return nextContent
+  }
+
+  const saveContent = async (contentToSave = editedContent) => {
+    const res = await fetch('/api/data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ [section]: contentToSave })
+    })
+
+    if (res.status === 401) {
+      throw new Error('unauthorized')
+    }
+
+    if (!res.ok) {
+      const result = await res.json().catch(() => null)
+      throw new Error(result?.error || 'Failed to save')
+    }
+
+    onSave()
+    return res.json().catch(() => null)
   }
 
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    onUrlResult: (url: string) => void,
+    onUrlResult: (url: string) => any,
     fieldIdentifier: string
   ) => {
     const file = e.target.files?.[0]
@@ -67,8 +96,9 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
         }
       } else if (res.ok) {
         const result = await res.json()
-        onUrlResult(result.url)
-        setMessage(result.storage === 'inline' ? 'File uploaded successfully! Save to publish this image.' : result.storage === 'supabase' ? 'File uploaded to Supabase successfully!' : 'File uploaded successfully!')
+        const nextContent = onUrlResult(result.url)
+        await saveContent(nextContent)
+        setMessage(result.storage === 'inline' ? 'File uploaded and published successfully!' : result.storage === 'supabase' ? 'File uploaded to Supabase and published successfully!' : 'File uploaded and published successfully!')
         setTimeout(() => setMessage(''), 3000)
       } else {
         const result = await res.json().catch(() => null)
@@ -86,30 +116,19 @@ export default function ContentEditor({ section, content, token, onSave, onUnaut
     setSaving(true)
     setMessage('')
     try {
-      const res = await fetch('/api/data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ [section]: editedContent })
-      })
-
-      if (res.status === 401) {
+      await saveContent()
+      setMessage('Saved successfully!')
+      setTimeout(() => setMessage(''), 2000)
+    } catch (error) {
+      if (error instanceof Error && error.message === 'unauthorized') {
         setMessage('Session expired or unauthorized. Logging out...')
         if (onUnauthorized) {
           setTimeout(() => onUnauthorized(), 1500)
         }
-      } else if (res.ok) {
-        setMessage('Saved successfully!')
-        onSave()
-        setTimeout(() => setMessage(''), 2000)
       } else {
-        setMessage('Failed to save')
+        console.error('Error saving:', error)
+        setMessage(error instanceof Error ? error.message : 'Error saving changes')
       }
-    } catch (error) {
-      console.error('Error saving:', error)
-      setMessage('Error saving changes')
     } finally {
       setSaving(false)
     }

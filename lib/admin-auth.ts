@@ -1,10 +1,12 @@
 import crypto from 'crypto'
 import fs from 'fs/promises'
 import path from 'path'
+import { readJsonFromSupabase, writeJsonToSupabase } from '@/lib/supabase-store'
 
 const AUTH_FILE = path.join(process.cwd(), 'auth.json')
 const DEFAULT_ADMIN_TOKEN = 'pandora-box-local-admin-token'
 const DEFAULT_ADMIN_PASSWORD = '123456'
+const AUTH_OBJECT_PATH = 'auth/admin.json'
 
 type AuthConfig = {
   passwordHash?: string
@@ -28,11 +30,29 @@ function safeCompare(value: string, expected: string) {
 
 async function readAuthConfig(): Promise<AuthConfig> {
   try {
+    const supabaseConfig = await readJsonFromSupabase<AuthConfig>(AUTH_OBJECT_PATH)
+    if (supabaseConfig) return supabaseConfig
+  } catch (error) {
+    console.warn('Unable to read admin auth from Supabase, falling back to auth.json:', error)
+  }
+
+  try {
     const content = await fs.readFile(AUTH_FILE, 'utf-8')
     return JSON.parse(content) as AuthConfig
   } catch {
     return {}
   }
+}
+
+async function writeAuthConfig(config: AuthConfig) {
+  try {
+    const storedInSupabase = await writeJsonToSupabase(AUTH_OBJECT_PATH, config)
+    if (storedInSupabase) return
+  } catch (error) {
+    console.warn('Unable to persist admin auth to Supabase, falling back to auth.json:', error)
+  }
+
+  await fs.writeFile(AUTH_FILE, JSON.stringify(config, null, 2))
 }
 
 export function getAdminToken() {
@@ -71,6 +91,6 @@ export async function updateAdminPassword(currentPassword: string, nextPassword:
     passwordHash: hashPassword(nextPassword),
   }
 
-  await fs.writeFile(AUTH_FILE, JSON.stringify(nextConfig, null, 2))
+  await writeAuthConfig(nextConfig)
   return { ok: true, status: 200 }
 }

@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs/promises'
-import path from 'path'
 import { verifyAdminToken } from '@/lib/admin-auth'
+import { readContentData, writeContentData } from '@/lib/content-store'
 
-const DB_FILE = path.join(process.cwd(), 'data.json')
-
-const DEFAULT_DATA = {
+const DEFAULT_DATA: Record<string, unknown> = {
   hero: {
     title: 'Transform Your Brand',
     subtitle: 'Experience 360° integrated communication strategies that drive results',
@@ -110,12 +107,7 @@ const DEFAULT_DATA = {
 }
 
 async function getData() {
-  try {
-    const content = await fs.readFile(DB_FILE, 'utf-8')
-    return JSON.parse(content)
-  } catch (error) {
-    return DEFAULT_DATA
-  }
+  return readContentData(DEFAULT_DATA)
 }
 
 export async function GET(request: NextRequest) {
@@ -155,10 +147,9 @@ export async function POST(request: NextRequest) {
     // Update the data
     const updatedData = { ...data, ...body }
 
-    // Save to file
-    await fs.writeFile(DB_FILE, JSON.stringify(updatedData, null, 2))
+    const result = await writeContentData(updatedData)
 
-    return NextResponse.json({ success: true, data: updatedData })
+    return NextResponse.json({ success: true, storage: result.storage, data: updatedData })
   } catch (error) {
     console.error('Error saving data:', error)
     return NextResponse.json({ error: 'Failed to save data' }, { status: 500 })
