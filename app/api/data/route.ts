@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
+import { verifyAdminToken } from '@/lib/admin-auth'
 
 const DB_FILE = path.join(process.cwd(), 'data.json')
 
@@ -144,8 +145,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-    // Verify the token (in production, this would be more secure)
-    if (token !== process.env.ADMIN_TOKEN) {
+    if (!verifyAdminToken(token)) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
